@@ -1,12 +1,29 @@
 from marshmallow import Schema, fields, validate, EXCLUDE
 
-class AddOneToolInputs(Schema):
+class ValidateRegistration(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    name = fields.Str(validate=validate.Length(min=1,  max=50, error='name has to be 1 to 50 characters'), required=True)
+    username = fields.Str(validate=validate.Length(min=1,  max=50, error='username has to be 1 to 50 characters'),allow_none=False, required=True)
 
-    description = fields.Str(validate=validate.Length(min=1, max=150, error='description has to be 1 to 150 characters'), required=True)
+    password = fields.Str(validate=validate.Length(min=1, max=150, error='password has to be 1 to 150 characters'),allow_none=False, required=True)
+
+    role = fields.Str(
+        required=True, allow_none=False,
+        validate=validate.OneOf(['admin','registered','subscribed','guest'],
+                       error='role must be one of: admin, registered, subscribed, guest')
+    )
+
+    subscription_plan = fields.Str(
+        required=True, allow_none=False,
+        validate=validate.OneOf(['basic','premium','enterprise'],
+                       error='subscription_plan must be one of: basic, premium, enterprise')
+    )
+
+    # by default it will return "Missing data for required field." if missing validator?
+
+    name = fields.Str(required=False, allow_none=True, load_default=None)
+    email = fields.Email(required=False, allow_none=True, load_default=None)
 
 class ValidateCreateListing(Schema):
     class Meta:
@@ -47,6 +64,24 @@ class ValidateCreateListing(Schema):
         required=True,
     )
 
+    tenure = fields.Str(
+        validate=validate.OneOf(
+            [
+                "freehold",
+                "99-year leasehold",
+                "103-year leasehold",
+                "110-year leasehold",
+                "999-year leasehold",
+                "9999-year leasehold",
+            ],
+            error=(
+                "tenure must be one of: freehold, 99-year leasehold, "
+                "103-year leasehold, 110-year leasehold, 999-year leasehold, 9999-year leasehold"
+            ),
+        ),
+        required=True,
+    )
+
     unit_number = fields.Str(
         required=True,
         validate=validate.Length(min=1, max=20, error="unit number is required")
@@ -77,3 +112,15 @@ class ValidateCreateListing(Schema):
         required=False,
         allow_none=True
     )
+
+class Validate_find_all_listings_by_username(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    username = fields.Str(validate=validate.Length(min=1,  max=50, error='username has to be 1 to 50 characters'),allow_none=False, required=True)
+
+class Validate_UUID_id(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    listing_id = fields.Str(required=True, allow_none=False)

@@ -2,12 +2,20 @@ import bcrypt
 from flask import request, jsonify, Blueprint
 from db.db_pool import get_cursor, release_connection
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
+import psycopg2
+
+from marshmallow import ValidationError
+from validators.tools import ValidateRegistration
 
 auth = Blueprint('auth', __name__)
 
-@auth.route('/register', methods=['POST'])
+@auth.route('/register', methods=['POST']) #active
 def register():
-    inputs = request.get_json()
+    data = request.get_json()
+    try:
+        inputs = ValidateRegistration().load(data)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
     conn, cursor = get_cursor()
     cursor.execute('SELECT id FROM accounts WHERE username = %s', (inputs['username'],))
     results = cursor.fetchone()
@@ -25,26 +33,49 @@ def register():
 
     return jsonify(status='ok', msg='registration done'), 200
 
-@auth.route('/login', methods=['POST'])
+@auth.route('/getAllAccounts')
+def find_all_accounts():
+    conn = None
+    try:
+        conn, cursor = get_cursor()
+
+        cursor.execute('SELECT * FROM accounts')
+        results = cursor.fetchall()
+
+        return jsonify(results), 200
+
+    except psycopg2.Error as err:
+        print(f'database error: {err}')
+        return jsonify({'status': 'error'}), 400
+    except SyntaxError as err:
+        print(f'syntax error: {err}')
+        return jsonify({'status': 'error'}), 400
+    except Exception as err:
+        print(f'unknown error: {err}')
+        return jsonify({'status': 'error'}), 500
+    finally:
+        release_connection(conn)
+
+@auth.route('/login', methods=['POST'])#active
 def login():
     inputs = request.get_json()
     conn, cursor = get_cursor()
-    cursor.execute('SELECT * FROM auth WHERE email = %s', (inputs['email'],))
+    cursor.execute('SELECT * FROM accounts WHERE username = %s', (inputs['username'],))
     results = cursor.fetchone()
     release_connection(conn)
 
     if not results:
-        return jsonify(status='error', msg='email or password incorrect'), 401
+        return jsonify(status='error', msg='username or password incorrect'), 401
 
     access = bcrypt.checkpw(inputs['password'].encode('utf-8'), results['hash'].encode('utf-8'))
 
     if not access:
-        return jsonify(status='error', msg='email or password incorrect'), 401
+        return jsonify(status='error', msg='username or password incorrect'), 401
 
 
-    claims = {'name': results['name']}
-    access_token = create_access_token(results['email'], additional_claims=claims)
-    refresh_token = create_refresh_token(results['email'], additional_claims=claims)
+    claims = {'username': results['username'], 'role': results['role']}
+    access_token = create_access_token(results['username'], additional_claims=claims)
+    refresh_token = create_refresh_token(results['username'], additional_claims=claims)
 
     return jsonify(access=access_token, refresh=refresh_token), 200
 
