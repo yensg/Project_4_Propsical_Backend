@@ -4,6 +4,7 @@ from flask_cors import CORS
 from resources.tools import tools
 from resources.auth import auth
 from flask_jwt_extended import JWTManager
+from resources.uploads import uploads
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"])
@@ -20,6 +21,7 @@ def my_jwt_error_callback_chicken(*args):
 
 app.register_blueprint(tools, url_prefix='/api')
 app.register_blueprint(auth, url_prefix='/auth')
+app.register_blueprint(uploads, url_prefix="/api")
 
 print(app.url_map)
 

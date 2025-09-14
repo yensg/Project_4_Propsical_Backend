@@ -40,11 +40,12 @@ class ValidateCreateListing(Schema):
         validate=validate.Range(min=1,max=50000, error='floor size must be greater than 0'),
     )
 
-    # land_size = fields.Int(
-    #     required=False,
-    #     allow_none=True,
-    #     validate=validate.Range(min=0, error='land size must be 0 or greater')
-    # )
+    land_size = fields.Int(
+        required=False,
+        allow_none=True,
+        load_default = None,
+        validate=validate.Range(min=0, error='land size must be 0 or greater')
+    )
 
     bedroom = fields.Int(
         required=True,
@@ -93,14 +94,16 @@ class ValidateCreateListing(Schema):
         required=False,
         as_string=True,
         allow_none=True,
-        places=6
+        places=6,
+        load_default=None
     )
 
     geo_lon = fields.Decimal(
         required=False,
         as_string=True,
         allow_none=True,
-        places=6
+        places=6,
+        load_default = None
     )
 
     summary = fields.Str(
@@ -108,7 +111,12 @@ class ValidateCreateListing(Schema):
         allow_none=True
     )
 
-    account_id = fields.UUID(
+    description = fields.Str(
+        required=False,
+        allow_none=True
+    )
+
+    account_id = fields.Str(
         required=False,
         allow_none=True
     )
@@ -124,3 +132,9 @@ class Validate_UUID_id(Schema):
         unknown = EXCLUDE
 
     listing_id = fields.Str(required=True, allow_none=False)
+
+class Validate_find_account_id_by_username(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    username = fields.Str(validate=validate.Length(min=1,  max=50, error='username has to be 1 to 50 characters'),allow_none=False, required=True)
