@@ -4,7 +4,7 @@ import psycopg2
 
 from marshmallow import ValidationError
 from validators.tools import ValidateCreateListing
-from validators.tools import Validate_find_all_listings_by_username
+from validators.tools import Validate_username
 from validators.tools import Validate_UUID_id
 from validators.tools import Validate_find_account_id_by_username
 
@@ -18,25 +18,28 @@ def find_all_listings_by_username():
     conn = None
     try:
         data = request.get_json()
-        try:
-         inputs =  Validate_find_all_listings_by_username().load(data)
-        except ValidationError as err:
-            return jsonify(err.messages)
+        inputs = Validate_username().load(data)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+    try:
         conn, cursor = get_cursor()
         cursor.execute('SELECT * FROM accounts JOIN listings ON accounts.id = listings.account_id WHERE accounts.username = %s', (inputs['username'],))
         results = cursor.fetchall()
 
         return jsonify(results), 200
 
-    except psycopg2.Error as err:
-        print(f'database error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except SyntaxError as err:
-        print(f'syntax error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except Exception as err:
-        print(f'unknown error: {err}')
-        return jsonify({'status': 'error'}), 500
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
     finally:
         release_connection(conn)
 
@@ -46,24 +49,28 @@ def delete_listing_by_listing_id():
     conn = None
     try:
         data = request.get_json()
-        try:
-         inputs =  Validate_UUID_id().load(data)
-        except ValidationError as err:
-            return jsonify(err.messages)
+        inputs = Validate_UUID_id().load(data)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    try:
         conn, cursor = get_cursor()
-        cursor.execute('DELETE FROM listings WHERE id = %s', (inputs['listing_id'],))
+        cursor.execute('DELETE FROM listings WHERE id = %s', (str(inputs['listing_id']),))
         conn.commit()
         return jsonify(status='ok', msg='tool delete'), 200
 
-    except psycopg2.Error as err:
-        print(f'database error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except SyntaxError as err:
-        print(f'syntax error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except Exception as err:
-        print(f'unknown error: {err}')
-        return jsonify({'status': 'error'}), 500
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
     finally:
         release_connection(conn)
 
@@ -72,25 +79,29 @@ def find_one_listings_by_listing_id():
     conn = None
     try:
         data = request.get_json()
-        try:
-            inputs = Validate_UUID_id().load(data)
-        except ValidationError as err:
-            return jsonify(err.messages)
+        inputs = Validate_UUID_id().load(data)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    try:
         conn, cursor = get_cursor()
-        cursor.execute('SELECT id, asking_price, floor_size, land_size, bedroom, toilet, type, location, geo_lat, geo_lon, summary, description, tenure FROM listings WHERE id = %s', (inputs['listing_id'],))
+        cursor.execute('SELECT id, asking_price, floor_size, land_size, bedroom, toilet, type, location, geo_lat, geo_lon, summary, description, tenure FROM listings WHERE id = %s', (str(inputs['listing_id']),)) # this command is a string but not in postgreSQL
         results = cursor.fetchone()
 
         return jsonify(results), 200
 
-    except psycopg2.Error as err:
-        print(f'database error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except SyntaxError as err:
-        print(f'syntax error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except Exception as err:
-        print(f'unknown error: {err}')
-        return jsonify({'status': 'error'}), 500
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
     finally:
         release_connection(conn)
 
@@ -104,43 +115,78 @@ def find_all_listings():
 
         return jsonify(results), 200
 
-    except psycopg2.Error as err:
-        print(f'database error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except SyntaxError as err:
-        print(f'syntax error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except Exception as err:
-        print(f'unknown error: {err}')
-        return jsonify({'status': 'error'}), 500
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
     finally:
         release_connection(conn)
 
-@tools.route('/username', methods=['PUT']) #active_ListingSummary
-@jwt_required()
+@tools.route('/username', methods=['PUT']) #active_ListingEach
+def find_username_by_listing_id():
+    conn = None
+    try:
+        data = request.get_json()
+        inputs = Validate_UUID_id().load(data)
+    except ValidationError as err:
+        return jsonify(err.messages)
+    try:
+        conn, cursor = get_cursor()
+        cursor.execute('SELECT name, username, phone FROM accounts JOIN listings ON accounts.id = listings.account_id WHERE listings.id = %s', (str(inputs['listing_id']),))
+        results = cursor.fetchone()
+
+        return jsonify(results), 200
+
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
+    finally:
+        release_connection(conn)
+
+@tools.route('/username', methods=['POST']) #active_ListingEach
 def find_account_id_by_username():
     conn = None
     try:
         data = request.get_json()
-        try:
-            inputs = Validate_find_account_id_by_username().load(data)
-        except ValidationError as err:
-            return jsonify(err.messages)
+        inputs = Validate_username().load(data)
+    except ValidationError as err:
+        return jsonify(err.messages)
+    try:
         conn, cursor = get_cursor()
         cursor.execute('SELECT id FROM accounts WHERE username = %s', (inputs['username'],))
         results = cursor.fetchone()
 
         return jsonify(results), 200
 
-    except psycopg2.Error as err:
-        print(f'database error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except SyntaxError as err:
-        print(f'syntax error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except Exception as err:
-        print(f'unknown error: {err}')
-        return jsonify({'status': 'error'}), 500
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
     finally:
         release_connection(conn)
 
@@ -148,16 +194,18 @@ def find_account_id_by_username():
 @jwt_required()
 def create_listing():
     conn = None
+
     try:
         data = request.get_json()
-        try:
-           inputs = ValidateCreateListing().load(data)
-        except ValidationError as err:
-            return jsonify(err.messages)
+        inputs = ValidateCreateListing().load(data)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    try:
         conn, cursor = get_cursor()
         cursor.execute('INSERT INTO listings (asking_price,floor_size,land_size,bedroom,toilet,type,tenure,unit_number,location,geo_lat,geo_lon,summary,description,account_id)'
                        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
-                       (inputs['asking_price'], inputs['floor_size'], inputs['land_size'], inputs['bedroom'], inputs['toilet'], inputs['type'], inputs['tenure'], inputs['unit_number'], inputs['location'], inputs['geo_lat'], inputs['geo_lon'], inputs['summary'], inputs['description'], inputs['account_id']))
+                       (inputs['asking_price'], inputs['floor_size'], inputs['land_size'], inputs['bedroom'], inputs['toilet'], inputs['type'], inputs['tenure'], inputs['unit_number'], inputs['location'], inputs['geo_lat'], inputs['geo_lon'], inputs['summary'], inputs['description'], str(inputs['account_id'])))
 
         # new_listing_id = cursor.fetchone()[0]
         row = cursor.fetchone()
@@ -165,18 +213,18 @@ def create_listing():
         conn.commit()
         return jsonify({"status": 'ok', "msg": 'listing added', "listing_id": str(new_listing_id)}), 200 #
 
-    except psycopg2.Error as err:
-        print(f'database error: {err}')
-        return jsonify({'status': 'error'}), 400
-
-    except SyntaxError as err:
-        print(f'syntax error: {err}')
-        return jsonify({'status': 'error'}), 400
-
-    except Exception as err:
-        print(f'unknown error: {err}')
-        return jsonify({'status': 'error'}), 500
-
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
     finally:
         release_connection(conn)
 
@@ -187,10 +235,7 @@ def update_listing_by_listing_id():
     try:
         listing_id = request.json.get('id')
         data = request.get_json()
-        try:
-            inputs = ValidateCreateListing().load(data)
-        except ValidationError as err:
-            return jsonify(err.messages)
+        inputs = ValidateCreateListing().load(data)
 
         conn, cursor = get_cursor()
         cursor.execute("SELECT * FROM listings WHERE id = %s",
@@ -210,37 +255,25 @@ def update_listing_by_listing_id():
                        'geo_lon = COALESCE(%s::numeric(9,6), %s),'
                        'summary = COALESCE(%s, %s),'
                        'description = COALESCE(%s, %s),'
-                       'account_id = COALESCE(%s::uuid, %s)  WHERE id = %s', (inputs['asking_price'], results['asking_price'],inputs['floor_size'],results['floor_size'],inputs['land_size'],    results['land_size'],inputs['bedroom'],results['bedroom'],inputs['toilet'],results['toilet'],inputs['type'],results['type'],inputs['tenure'],results['tenure'],inputs['unit_number'],results['unit_number'],inputs['location'],results['location'],inputs['geo_lat'],results['geo_lat'],inputs['geo_lon'],results['geo_lon'],inputs['summary'],results['summary'],inputs['description'],results['description'],inputs['account_id'],results['account_id'],listing_id))
+                       'account_id = COALESCE(%s::uuid, %s)  WHERE id = %s', (inputs['asking_price'], results['asking_price'],inputs['floor_size'],results['floor_size'],inputs['land_size'],    results['land_size'],inputs['bedroom'],results['bedroom'],inputs['toilet'],results['toilet'],inputs['type'],results['type'],inputs['tenure'],results['tenure'],inputs['unit_number'],results['unit_number'],inputs['location'],results['location'],inputs['geo_lat'],results['geo_lat'],inputs['geo_lon'],results['geo_lon'],inputs['summary'],results['summary'],inputs['description'],results['description'],str(inputs['account_id']),results['account_id'],listing_id))
 
         conn.commit()
 
         return jsonify(status='ok', msg='listing update'), 200
-    except psycopg2.Error as err:
-        print(f'database error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except SyntaxError as err:
-        print(f'syntax error: {err}')
-        return jsonify({'status': 'error'}), 400
-    except Exception as err:
-        print(f'unknown error: {err}')
-        return jsonify({'status': 'error'}), 500
+
+    except ValidationError as e:
+        return jsonify(f'Validation Error: {e.messages}'), 400
+    except psycopg2.IntegrityError as e:
+        print(f'Constraint violated: {e}')
+        return jsonify({'error': 'Constraints broken'}), 400
+    except psycopg2.ProgrammingError as e:
+        print(f'SQL syntax error: {e}')
+        return jsonify({'error': 'SQL syntax error'}), 400
+    except psycopg2.Error as e:
+        print(f'Other database error: {e}')
+        return jsonify({'error': 'Other database error'}), 400
+    except Exception as e:
+        print(f'unknown error: {e}')
+        return jsonify({'error': 'Unknown error'}), 500
     finally:
         release_connection(conn)
-
-@tools.route('/tools/methods', methods=['GET','POST'])
-def tools_endpoints():
-    conn, cursor = get_cursor()
-    return_value = None
-
-    if request.method == 'GET':
-        cursor.execute('SELECT * FROM tools ORDER by id')
-        return_value = cursor.fetchall()
-
-    elif request.method == 'POST':
-        data = request.get_json()
-        cursor.execute('SELECT * FROM tools WHERE id = %s', (data['id'],))
-        return_value = cursor.fetchone()
-
-    release_connection(conn)
-
-    return jsonify(return_value), 200

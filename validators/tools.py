@@ -24,6 +24,7 @@ class ValidateRegistration(Schema):
 
     name = fields.Str(required=False, allow_none=True, load_default=None)
     email = fields.Email(required=False, allow_none=True, load_default=None)
+    phone = fields.Str(required=False, allow_none=True, load_default=None)
 
 class ValidateCreateListing(Schema):
     class Meta:
@@ -85,6 +86,7 @@ class ValidateCreateListing(Schema):
 
     unit_number = fields.Str(
         required=True,
+
         validate=validate.Length(min=1, max=20, error="unit number is required")
     )
 
@@ -116,12 +118,12 @@ class ValidateCreateListing(Schema):
         allow_none=True
     )
 
-    account_id = fields.Str(
+    account_id = fields.UUID(
         required=False,
         allow_none=True
     )
 
-class Validate_find_all_listings_by_username(Schema):
+class Validate_username(Schema):
     class Meta:
         unknown = EXCLUDE
 
@@ -131,10 +133,16 @@ class Validate_UUID_id(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    listing_id = fields.Str(required=True, allow_none=False)
+    listing_id = fields.UUID(required=True, allow_none=False) #convert to UUID here first then validate
 
 class Validate_find_account_id_by_username(Schema):
     class Meta:
         unknown = EXCLUDE
 
     username = fields.Str(validate=validate.Length(min=1,  max=50, error='username has to be 1 to 50 characters'),allow_none=False, required=True)
+
+class Validate_public_id(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    public_id = fields.Str(required=True, allow_none=False)

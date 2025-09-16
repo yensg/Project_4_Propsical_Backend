@@ -25,9 +25,9 @@ def register():
 
     hash = bcrypt.hashpw(inputs['password'].encode('utf-8'), bcrypt.gensalt())
 
-    cursor.execute('INSERT INTO accounts (username, email, name, hash, role, subscription_plan)'
-                   ' VALUES (%s, %s, %s, %s, %s, %s)',
-                   (inputs['username'], inputs['email'], inputs['name'],hash.decode('utf-8'), inputs['role'], inputs['subscription_plan'] ))
+    cursor.execute('INSERT INTO accounts (username, email, name, phone, hash, role, subscription_plan)'
+                   ' VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                   (inputs['username'], inputs['email'], inputs['name'], inputs['phone'],hash.decode('utf-8'), inputs['role'], inputs['subscription_plan'] ))
     conn.commit()
     release_connection(conn)
 
