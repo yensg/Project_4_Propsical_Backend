@@ -164,3 +164,5 @@ CHECK (
 );
 
 
+SELECT * FROM accounts;
+SELECT * FROM listings;

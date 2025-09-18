@@ -85,7 +85,7 @@ def find_one_listings_by_listing_id():
 
     try:
         conn, cursor = get_cursor()
-        cursor.execute('SELECT id, asking_price, floor_size, land_size, bedroom, toilet, type, location, geo_lat, geo_lon, summary, description, tenure FROM listings WHERE id = %s', (str(inputs['listing_id']),)) # this command is a string but not in postgreSQL
+        cursor.execute('SELECT id, asking_price, floor_size, land_size, bedroom, toilet, unit_number, type, location, geo_lat, geo_lon, summary, description, tenure FROM listings WHERE id = %s', (str(inputs['listing_id']),)) # this command is a string but not in postgreSQL
         results = cursor.fetchone()
 
         return jsonify(results), 200
