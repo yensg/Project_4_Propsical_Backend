@@ -28,4 +28,5 @@ app.register_blueprint(calendar, url_prefix="/api")
 print(app.url_map)
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=os.getenv('DEBUG', False))
+    app.run()
+    # app.run(port=5001, debug=os.getenv('DEBUG', False))
