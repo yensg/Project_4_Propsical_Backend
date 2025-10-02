@@ -28,6 +28,10 @@ app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(uploads, url_prefix="/api")
 app.register_blueprint(calendar, url_prefix="/api")
 
+@app.get("/api/health")
+def health():
+    return jsonify(ok=True)
+
 print(app.url_map)
 
 if __name__ == '__main__':
