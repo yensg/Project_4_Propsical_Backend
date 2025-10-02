@@ -7,8 +7,11 @@ from flask_jwt_extended import JWTManager
 from resources.uploads import uploads
 from resources.calendar import calendar
 
+
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"])
+# CORS(app, origins=["http://localhost:5173"])
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+CORS(app, resources={r"/*": {"origins": frontend_origin}})
 
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 jwt = JWTManager(app)
