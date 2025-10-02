@@ -15,24 +15,24 @@ CORS(app, resources={r"/*": {"origins": frontend_origin}})
 
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 jwt = JWTManager(app)
-@jwt.expired_token_loader
-@jwt.invalid_token_loader
-@jwt.unauthorized_loader
-@jwt.needs_fresh_token_loader
-@jwt.revoked_token_loader
-def my_jwt_error_callback_chicken(*args):
-    return jsonify(msg='access denied'), 200
-
-app.register_blueprint(tools, url_prefix='/api')
-app.register_blueprint(auth, url_prefix='/auth')
-app.register_blueprint(uploads, url_prefix="/api")
-app.register_blueprint(calendar, url_prefix="/api")
+# @jwt.expired_token_loader
+# @jwt.invalid_token_loader
+# @jwt.unauthorized_loader
+# @jwt.needs_fresh_token_loader
+# @jwt.revoked_token_loader
+# def my_jwt_error_callback_chicken(*args):
+#     return jsonify(msg='access denied'), 200
+#
+# app.register_blueprint(tools, url_prefix='/api')
+# app.register_blueprint(auth, url_prefix='/auth')
+# app.register_blueprint(uploads, url_prefix="/api")
+# app.register_blueprint(calendar, url_prefix="/api")
 
 @app.get("/api/health")
 def health():
     return jsonify(ok=True)
 
-print(app.url_map)
+# print(app.url_map)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
